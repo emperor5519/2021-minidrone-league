@@ -1,8 +1,21 @@
 # 2021 미니드론 자율주행 경진대회 A리그 범내려온다팀
 
+## 대회 목표
+![드론 기체](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/드론.png?raw=true)  
+DJI Tello 미니 드론을 사용합니다.
+
+![목표](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/맵.png?raw=true)
+![목표](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/링범위.png?raw=true)
+![목표](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/링표식.png?raw=true)
+
+시작점에서 상승하여 총 세 개의 규격과 높낮이가 다른 링을 통과하고 정해진 시간 내에 도착지점에 착지시키는 것이 목표인 대회입니다.
+
+---
+<br></br>
+
 ## 대회 진행 전략
-![전략](https://github.com/yoonbeomjun/Aleague_bumdown/blob/master/readme/1.PNG?raw=true)
-![전략](https://github.com/yoonbeomjun/Aleague_bumdown/blob/master/readme/2.PNG?raw=true)
+![전략](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/전략1.png?raw=true)
+![전략](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/전략2.png?raw=true)
 
 ### 
 - **1. 링 구멍의 중심을 찾는 전략** :  카메라를 캡쳐하여 링을 이진화시킵니다. 이진화 영상에서 imfill함수를 사용하여 구멍을 채웁니다. 구멍을 채운 영상에서 이진화 영상을 빼서 구멍만을 추출합니다. 구멍의 중심을 찾아 Throttle제어와 Roll제어를 하여 드론과 구멍의 중심이 일치하게 제어합니다.
@@ -16,8 +29,8 @@
 ---
 <br></br>
 ## 알고리즘 설명
-![알고리즘도](https://github.com/yoonbeomjun/Aleague_bumdown/blob/master/readme/1%EB%8B%A8%EA%B3%84.PNG?raw=true)
-![알고리즘도](https://github.com/yoonbeomjun/Aleague_bumdown/blob/master/readme/2,3%EB%8B%A8%EA%B3%84.PNG?raw=true)
+![알고리즘도](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/알고리즘1.png?raw=true)
+![알고리즘도](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/알고리즘2.png?raw=true)
 
 
 - **1단계**  
