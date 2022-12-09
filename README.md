@@ -1,7 +1,7 @@
-# 2021 미니드론 자율주행 경진대회 A리그
+# 2021 미니드론 자율주행 경진대회 A리그 범내려온다팀
 ## 대회 진행 전략
-![전략](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/%EC%A0%84%EB%9E%B51.png?raw=true)
-![전략](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/%EC%A0%84%EB%9E%B52.png?raw=true)
+![전략](https://github.com/yoonbeomjun/Aleague_bumdown/blob/master/readme/1.PNG?raw=true)
+![전략](https://github.com/yoonbeomjun/Aleague_bumdown/blob/master/readme/2.PNG?raw=true)
 
 ### 
 - **1. 링 구멍의 중심을 찾는 전략** :  카메라를 캡쳐하여 링을 이진화시킵니다. 이진화 영상에서 imfill함수를 사용하여 구멍을 채웁니다. 구멍을 채운 영상에서 이진화 영상을 빼서 구멍만을 추출합니다. 구멍의 중심을 찾아 Throttle제어와 Roll제어를 하여 드론과 구멍의 중심이 일치하게 제어합니다.
@@ -15,8 +15,8 @@
 ---
 <br></br>
 ## 알고리즘 설명
-![알고리즘도](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%981.png?raw=true)
-![알고리즘도](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%982.png?raw=true)
+![알고리즘도](https://github.com/yoonbeomjun/Aleague_bumdown/blob/master/readme/1%EB%8B%A8%EA%B3%84.PNG?raw=true)
+![알고리즘도](https://github.com/yoonbeomjun/Aleague_bumdown/blob/master/readme/2,3%EB%8B%A8%EA%B3%84.PNG?raw=true)
 
 
 - **1단계**  
@@ -69,3 +69,496 @@
 
 ---
 <br></br>
+## 소스코드 설명
+
+### 드론 및 변수 설정
+```matlab
+clear;
+drone=ryze();
+cam=camera(drone);
+
+idealX = 480;
+idealY = 200;
+past_red = 0;
+current_red = 0;
+move = 0;
+a=0;
+b=0;
+```
+### 1단계
+```matlab
+%드론을 띄워주고 1단계 높이를 맞춤
+takeoff(drone);
+moveup(drone,'Distance', 0.3,'Speed',1);
+moveforward(drone,'Distance', 1.5,'Speed',1);
+```
+   - **전진 알고리즘**
+```matlab
+while 1
+    frame =snapshot(cam);
+    hsv = rgb2hsv(frame);
+    h = hsv(:,:,1);
+    s = hsv(:,:,2);
+    binary_res_red = ((0.95<h)&(h<1.0))&((0.645<s)&(s<0.925));
+    if sum(binary_res_red,'all') > 50 && sum(binary_res_red,'all') < 1000
+        stats = regionprops('table',binary_res_red,'Centroid','MajorAxisLength','MinorAxisLength');
+        for i = 1:size(stats)
+            if stats.MajorAxisLength(i)==max(stats.MajorAxisLength)
+                maxI=i;
+                break;
+            end
+        end
+        centerX = max(stats.Centroid(maxI,1));
+        centerY = max(stats.Centroid(maxI,2));
+        if abs(idealX - centerX) < 40
+            a=1;
+        elseif idealX - centerX < 0
+            a=0;
+            moveright(drone,'distance',0.2,'Speed',1);
+        elseif idealX - centerX > 0
+            a=0;
+            moveleft(drone,'distance',0.3,'Speed',1);
+        end
+        if abs(idealY - centerY) < 30
+            b=1;
+        elseif idealY - centerY < 0 && b == 0
+            movedown(drone,'distance',0.2,'Speed',1);
+        elseif idealY - centerY > 0 && b == 0
+            moveup(drone,'distance',0.3,'Speed',1);
+        end
+        if a==0 || b == 0
+            continue
+        end
+    end
+
+    past_red = current_red;
+    current_red = sum(binary_res_red, 'all');
+    if past_red > 0 & past_red - 50 > current_red 
+        turn(drone, deg2rad(-90));
+        break
+    end
+    if current_red >= 3000
+        turn(drone, deg2rad(-90));
+        break
+    end
+    
+    moveforward(drone,'Distance', 0.4,'Speed',1);
+end
+```
+### 2단계
+```matlab
+past_red = 0;
+current_red = 0;
+a=0;
+b=0;
+move = 0;
+
+moveforward(drone,'Distance', 1,'Speed',1);
+moveup(drone,'Distance',0.8,'Speed',1);
+moveright(drone,'Distance',1.5,'Speed',1);
+```
+- **링 인식 알고리즘**
+```matlab
+while 1
+    frame =snapshot(cam);
+    hsv = rgb2hsv(frame);
+    h = hsv(:,:,1);
+    s = hsv(:,:,2);
+    binary_res = ((0.615<h)&(h<0.685))&((0.43<s)&(s<0.85));
+    subplot(2,1,2), subimage(binary_res);
+    disp(sum(binary_res,'all'));
+    fillimg = imfill(binary_res,'holes');
+    %링 찾으면 탈출
+    if sum(fillimg,'all') > 30000
+        break
+    end
+    if move == 0
+        moveleft(drone,'Distance',1.5,'speed',1);
+        move = 1;
+    elseif move == 1
+        moveleft(drone,'distance',1.5,'speed',1);
+        move = 2;
+    elseif move == 2
+        moveright(drone,'Distance',3,'Speed',1);
+        movedown(drone,'distance',0.5,'Speed',1);
+        move = 0;
+    end
+end
+```
+- **구멍 찾기 알고리즘** 
+```matlab
+while 1
+    frame =snapshot(cam);
+    hsv = rgb2hsv(frame);
+    h = hsv(:,:,1);
+    s = hsv(:,:,2);
+    binary_res = ((0.615<h)&(h<0.685))&((0.43<s)&(s<0.85));
+    binary_res_red = ((0.95<h)&(h<1.0))&((0.645<s)&(s<0.925));
+    subplot(2,1,2), subimage(binary_res);
+    
+    %표식이 보이면 탈출
+    if sum(binary_res_red,'all') > 50
+        break
+    end
+    
+    %이미지 채우기
+    fillimg = imfill(binary_res,'holes');
+    result = fillimg - binary_res;
+    disp(sum(result,'all'));
+    %구멍이 보이면 탈출
+    if sum(result,'all') > 20000
+        break
+    elseif sum(result,'all') < 20000
+        stats = regionprops('table',binary_res,'Centroid','MajorAxisLength','MinorAxisLength');
+        for i = 1:size(stats)
+            if stats.MajorAxisLength(i)==max(stats.MajorAxisLength)
+                maxI=i;
+                break;
+            end
+        end
+        centerX = max(stats.Centroid(maxI,1));
+        centerY = max(stats.Centroid(maxI,2));
+        
+        if abs(idealX - centerX) < 40
+            a=1;
+        elseif idealX - centerX < 0
+            a=0;
+            moveright(drone,'distance',0.5,'Speed',1);
+        elseif idealX - centerX > 0
+            a=0;
+            moveleft(drone,'distance',0.4,'Speed',1);
+        end
+        if abs(idealY - centerY) < 20
+            b=1;
+        elseif idealY - centerY < 0
+            b=0;
+            movedown(drone,'distance',0.3,'Speed',1);
+        elseif idealY - centerY > 0
+            b=0;
+            moveup(drone,'distance',0.4,'Speed',1);
+        end
+        if a==1 && b==1
+            break
+        end
+    end
+end
+```
+- **중심 찾기 알고리즘** 
+```matlab
+while 1
+    frame =snapshot(cam);
+    hsv = rgb2hsv(frame);
+    h = hsv(:,:,1);
+    s = hsv(:,:,2);
+    binary_res = ((0.615<h)&(h<0.685))&((0.43<s)&(s<0.85));
+    binary_res_red = ((0.95<h)&(h<1.0))&((0.645<s)&(s<0.925));
+    
+    %표식이 보이면 탈출
+    if sum(binary_res_red,'all') > 50
+        break
+    end
+    %이미지 채우기
+    fillimg = imfill(binary_res,'holes');
+    result = fillimg - binary_res; 
+    subplot(2,1,1), subimage(result);
+    subplot(2,1,2), subimage(binary_res);
+    stats = regionprops('table',result,'Centroid','MajorAxisLength','MinorAxisLength');
+    for i = 1:size(stats)
+        if stats.MajorAxisLength(i)==max(stats.MajorAxisLength)
+            maxI=i;
+            break;
+        end
+    end
+    centerX = max(stats.Centroid(maxI,1));
+    centerY = max(stats.Centroid(maxI,2));
+    
+    if abs(idealX - centerX) < 40
+        a=1;
+    elseif idealX - centerX < 0
+        a=0;
+        moveright(drone,'distance',0.3,'Speed',1);
+    elseif idealX - centerX > 0
+        a=0;
+        moveleft(drone,'distance',0.2,'Speed',1);
+    end
+    if abs(idealY - centerY) < 20
+        b=1;
+    elseif idealY - centerY < 0
+        b=0;
+        movedown(drone,'distance',0.2,'Speed',1);
+    elseif idealY - centerY > 0
+        b=0;
+        moveup(drone,'distance',0.3,'Speed',1);
+    end
+    
+    if a==1 && b==1
+        break
+    end
+end
+```
+- **전진 알고리즘** 
+```matlab
+while 1
+    frame =snapshot(cam);
+    hsv = rgb2hsv(frame);
+    h = hsv(:,:,1);
+    s = hsv(:,:,2);
+    binary_res_red = ((0.95<h)&(h<1.0))&((0.645<s)&(s<0.925));
+    subplot(2,1,1), subimage(binary_res_red);
+    disp(sum(binary_res_red,'all'));
+    if sum(binary_res_red,'all') > 50 && sum(binary_res_red,'all') < 1000
+        stats = regionprops('table',binary_res_red,'Centroid','MajorAxisLength','MinorAxisLength');
+        for i = 1:size(stats)
+            if stats.MajorAxisLength(i)==max(stats.MajorAxisLength)
+                maxI=i;
+                break;
+            end
+        end
+        centerX = max(stats.Centroid(maxI,1));
+        centerY = max(stats.Centroid(maxI,2));
+        disp(centerX);
+        disp(centerY);
+        if abs(idealX - centerX) < 40
+            a=1;
+        elseif idealX - centerX < 0
+            a=0;
+            moveright(drone,'distance',0.2,'Speed',1);
+        elseif idealX - centerX > 0
+            a=0;
+            moveleft(drone,'distance',0.3,'Speed',1);
+        end
+        if abs(idealY - centerY) < 20
+            b=1;
+        elseif idealY - centerY < 0 && b == 0
+            movedown(drone,'distance',0.2,'Speed',1);
+        elseif idealY - centerY > 0 && b == 0
+            moveup(drone,'distance',0.3,'Speed',1);
+        end
+        if a==0 || b == 0
+            continue
+        end
+    end
+
+    past_red = current_red;
+    current_red = sum(binary_res_red, 'all');
+    if past_red > 0 & past_red - 50 > current_red 
+        turn(drone, deg2rad(-90));
+        break
+    end
+    if current_red >= 3000
+        turn(drone, deg2rad(-90));
+        break
+    end
+    
+    moveforward(drone,'Distance', 0.4,'Speed',1);
+end
+```
+### 3단계
+```matlab
+past_red = 0;
+current_red = 0;
+a=0;
+b=0;
+move = 0;
+
+moveforward(drone,'Distance', 1.2,'Speed',1);
+if readHeight(drone) < 1
+    moveup(drone,'Distance',1,'Speed',1);
+end
+```
+- **링 찾기 알고리즘** 
+```matlab
+while 1
+    frame =snapshot(cam);
+    hsv = rgb2hsv(frame);
+    h = hsv(:,:,1);
+    s = hsv(:,:,2);
+    binary_res = ((0.615<h)&(h<0.685))&((0.43<s)&(s<0.85));
+    subplot(2,1,2), subimage(binary_res);
+    disp(sum(binary_res,'all'));
+    fillimg = imfill(binary_res,'holes');
+    %링 찾으면 탈출
+    if sum(fillimg,'all') > 30000
+        break
+    end
+    if move == 0
+        moveleft(drone,'Distance',1.5,'speed',1);
+        move = 1;
+    elseif move == 1
+        moveleft(drone,'distance',1.5,'speed',1);
+        move = 2;
+    elseif move == 2
+        moveright(drone,'Distance',3,'Speed',1);
+        movedown(drone,'distance',0.5,'Speed',1);
+        move = 0;
+    end
+end
+```
+- **구멍 찾기 알고리즘** 
+```matlab
+while 1
+    frame =snapshot(cam);
+    hsv = rgb2hsv(frame);
+    h = hsv(:,:,1);
+    s = hsv(:,:,2);
+    binary_res = ((0.615<h)&(h<0.685))&((0.43<s)&(s<0.85));
+    binary_res_red = ((0.835<h)&(h<0.915))&((0.435<s)&(s<0.725));
+    subplot(2,1,2), subimage(binary_res);
+    
+    %표식이 보이면 탈출
+    if sum(binary_res_red,'all') > 50
+        break
+    end
+    
+    %이미지 채우기
+    fillimg = imfill(binary_res,'holes');
+    result = fillimg - binary_res;
+    disp(sum(result,'all'));
+    %구멍이 보이면 탈출
+    if sum(result,'all') > 20000
+        break
+    elseif sum(result,'all') < 20000
+        stats = regionprops('table',binary_res,'Centroid','MajorAxisLength','MinorAxisLength');
+        for i = 1:size(stats)
+            if stats.MajorAxisLength(i)==max(stats.MajorAxisLength)
+                maxI=i;
+                break;
+            end
+        end
+        centerX = max(stats.Centroid(maxI,1));
+        centerY = max(stats.Centroid(maxI,2));
+        
+        if abs(idealX - centerX) < 40
+            a=1;
+        elseif idealX - centerX < 0
+            a=0;
+            moveright(drone,'distance',0.5,'Speed',1);
+        elseif idealX - centerX > 0
+            a=0;
+            moveleft(drone,'distance',0.4,'Speed',1);
+        end
+        if abs(idealY - centerY) < 20
+            b=1;
+        elseif idealY - centerY < 0
+            b=0;
+            movedown(drone,'distance',0.3,'Speed',1);
+        elseif idealY - centerY > 0
+            b=0;
+            moveup(drone,'distance',0.4,'Speed',1);
+        end
+        if a==1 && b==1
+            break
+        end
+    end
+end
+```
+- **중점 찾기 알고리즘** 
+```matlab
+while 1
+    frame =snapshot(cam);
+    hsv = rgb2hsv(frame);
+    h = hsv(:,:,1);
+    s = hsv(:,:,2);
+    binary_res = ((0.615<h)&(h<0.685))&((0.43<s)&(s<0.85));
+    binary_res_red = ((0.835<h)&(h<0.915))&((0.435<s)&(s<0.725));
+    
+    %표식이 보이면 탈출
+    if sum(binary_res_red,'all') > 50
+        break
+    end
+    %이미지 채우기
+    fillimg = imfill(binary_res,'holes');
+    result = fillimg - binary_res; 
+    subplot(2,1,1), subimage(result);
+    subplot(2,1,2), subimage(binary_res);
+    stats = regionprops('table',result,'Centroid','MajorAxisLength','MinorAxisLength');
+    for i = 1:size(stats)
+        if stats.MajorAxisLength(i)==max(stats.MajorAxisLength)
+            maxI=i;
+            break;
+        end
+    end
+    centerX = max(stats.Centroid(maxI,1));
+    centerY = max(stats.Centroid(maxI,2));
+    
+    if abs(idealX - centerX) < 40
+        a=1;
+    elseif idealX - centerX < 0
+        a=0;
+        moveright(drone,'distance',0.3,'Speed',1);
+    elseif idealX - centerX > 0
+        a=0;
+        moveleft(drone,'distance',0.2,'Speed',1);
+    end
+    if abs(idealY - centerY) < 20
+        b=1;
+    elseif idealY - centerY < 0
+        b=0;
+        movedown(drone,'distance',0.2,'Speed',1);
+    elseif idealY - centerY > 0
+        b=0;
+        moveup(drone,'distance',0.3,'Speed',1);
+    end
+    
+    if a==1 && b==1
+        break
+    end
+end
+```
+- **전진 알고리즘** 
+```matlab
+while 1
+    frame =snapshot(cam);
+    hsv = rgb2hsv(frame);
+    h = hsv(:,:,1);
+    s = hsv(:,:,2);
+    binary_res_red = ((0.835<h)&(h<0.915))&((0.435<s)&(s<0.725));
+    subplot(2,1,1), subimage(binary_res_red);
+    disp(sum(binary_res_red,'all'));
+    if sum(binary_res_red,'all') > 50 && sum(binary_res_red,'all') < 1000
+        stats = regionprops('table',binary_res_red,'Centroid','MajorAxisLength','MinorAxisLength');
+        for i = 1:size(stats)
+            if stats.MajorAxisLength(i)==max(stats.MajorAxisLength)
+                maxI=i;
+                break;
+            end
+        end
+        centerX = max(stats.Centroid(maxI,1));
+        centerY = max(stats.Centroid(maxI,2));
+        disp(centerX);
+        disp(centerY);
+        if abs(idealX - centerX) < 40
+            a=1;
+        elseif idealX - centerX < 0
+            a=0;
+            moveright(drone,'distance',0.2,'Speed',1);
+        elseif idealX - centerX > 0
+            a=0;
+            moveleft(drone,'distance',0.3,'Speed',1);
+        end
+        if abs(idealY - centerY) < 20
+            b=1;
+        elseif idealY - centerY < 0 && b == 0
+            movedown(drone,'distance',0.2,'Speed',1);
+        elseif idealY - centerY > 0 && b == 0
+            moveup(drone,'distance',0.3,'Speed',1);
+        end
+        if a==0 || b == 0
+            continue
+        end
+    end
+
+    past_red = current_red;
+    current_red = sum(binary_res_red, 'all');
+    if past_red > 0 & past_red - 50 > current_red 
+        land(drone);
+        break
+    end
+    if current_red >= 3000
+        land(drone);
+        break
+    end
+    
+    moveforward(drone,'Distance', 0.4,'Speed',1);
+end
+```
