@@ -6,7 +6,7 @@ DJI Tello 미니 드론을 사용합니다.
 
 ### 
 
-<img src="/img/맵.png" width="450" height="500"> <img src="/img/링범위.png" width="400" height="500">  
+<img src="/img/맵.png" width="450" height="500"> <img src="/img/링범위.png" width="450" height="500">  
 <img src="/img/링표식.png" width="400" height="450">  
 
 시작점에서 상승하여 총 세 개의 규격과 높낮이가 다른 링을 통과하고 정해진 시간 내에 도착지점에 착지시키는 것이 목표인 대회입니다.
