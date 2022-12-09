@@ -1,5 +1,7 @@
 # 2021 미니드론 자율주행 경진대회 A리그 범내려온다팀
 ## 대회 진행 전략
+
+## 대회 진행 전략
 ![전략](https://github.com/yoonbeomjun/Aleague_bumdown/blob/master/readme/1.PNG?raw=true)
 ![전략](https://github.com/yoonbeomjun/Aleague_bumdown/blob/master/readme/2.PNG?raw=true)
 
