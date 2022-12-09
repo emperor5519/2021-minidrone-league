@@ -1,4 +1,4 @@
-# 2021 미니드론 자율주행 경진대회 A리그 범내려온다팀!:tiger:
+# 2021 미니드론 자율주행 경진대회 A리그
 ## 대회 진행 전략
 ![전략](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/%EC%A0%84%EB%9E%B51.png?raw=true)
 ![전략](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/%EC%A0%84%EB%9E%B52.png?raw=true)
