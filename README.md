@@ -1,12 +1,13 @@
 # 2021 미니드론 자율주행 경진대회 A리그 범내려온다팀
 
 ## 대회 목표
-![드론 기체](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/드론.png?raw=true)  
-DJI Tello 미니 드론을 사용합니다.
+<img src="/img/드론.png" width="350" height="350">  
+DJI Tello 미니 드론을 사용합니다.  
 
-![목표](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/맵.png?raw=true)
-![목표](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/링범위.png?raw=true)
-![목표](https://github.com/emperor5519/2021-minidrone-league/blob/main/img/링표식.png?raw=true)
+### 
+
+<img src="/img/맵.png" width="350" height="350"> <img src="/img/링범위.png" width="350" height="350">  
+<img src="/img/링표식.png" width="350" height="350">  
 
 시작점에서 상승하여 총 세 개의 규격과 높낮이가 다른 링을 통과하고 정해진 시간 내에 도착지점에 착지시키는 것이 목표인 대회입니다.
 
